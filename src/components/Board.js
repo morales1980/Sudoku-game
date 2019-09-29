@@ -6,66 +6,69 @@ class Board extends Component {
     super(props)
     this.state = {
       initialBoard: '52...6.........7.13...........4..8..6......5...........418.........3..2...87.....',
-      board: ''
+      board: '',
+      initialNumbers: []
     }
 
+    this.getNumbers = this.getNumbers.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this.getNumber = this.getNumber.bind(this);
-    this.compareBoards = this.compareBoards.bind(this);
+    this.markInitialNumners = this.markInitialNumners.bind(this);
   }
 
   componentDidMount() {
     if(this.state.board === '') {
+      const initialNumbers = this.markInitialNumners();
+
       this.setState({
-        board: this.state.initialBoard
+        board: this.state.initialBoard,
+        initialNumbers: initialNumbers
       })
     }
   }
 
-  handleChange(index, e) {
-    let board = [...this.state.board];
-    const updateBoard = (index, e) => {
-      board[index] = e.target.value;
-
-      return board;
-    };
-
-    const newBoard = updateBoard(index, e);
-
-    this.setState({
-      board: newBoard
-    });
-  }
-
-  getNumber() {
+  getNumbers() {
     const numbers = [...this.state.board];
     const newNumbers = numbers.map((number) => {
-      if(number==='.') number = undefined;
+      if(number==='.') number = '';
+
       return number;
     });
+
     return newNumbers;
   }
 
-  compareBoards() {
-    let indexArray = [];
+  handleChange(index, e) {
+    const board = [...this.state.board];
+    board[index] = e.target.value;
+    const stringifiedBoard = board.toString().replace(/,/g, '');
+
+    this.setState({
+      board: stringifiedBoard
+    });
+  }
+
+  markInitialNumners() {
+    const initialNumbersIndex = [];
     const initialBoard = [...this.state.initialBoard];
-    const disabledNumbers = initialBoard.filter((element, index) => {
-      if(element !== '.') {
-        indexArray.push(index);
-      }
+
+    initialBoard.forEach((element) => {
+      (element !== '.') ? initialNumbersIndex.push(true) : initialNumbersIndex.push(false);
     });
 
-    return indexArray;
+    return initialNumbersIndex;
   }
 
   render() {
-    const initialValues = this.compareBoards();
+    const initialNumbers = this.state.initialNumbers;
+    const numbers = this.getNumbers();
 
-    const numbers = this.getNumber();
     const listItems = numbers.map((number, index) => (
-      <li key={index}>
-        <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number}/>
-      </li>
+        <li key={index}>
+          { initialNumbers[index]
+            ? <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number} disabled/>
+            : <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number}/>
+          }
+        </li>
     ));
 
     return (
@@ -77,9 +80,3 @@ class Board extends Component {
 }
 
 export default Board;
-
-// const listItems = numbers.map((number, index) => (
-//   <li key={index}>
-//     <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number}/>
-//   </li>
-// ));
