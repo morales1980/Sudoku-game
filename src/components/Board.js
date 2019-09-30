@@ -1,5 +1,8 @@
 import React, {Component} from 'react';
 import Tile from './Tile';
+import sudoku from 'sudoku-umd';
+import Display from './Display';
+import Buttons from './Buttons';
 
 class Board extends Component {
   constructor(props) {
@@ -7,23 +10,58 @@ class Board extends Component {
     this.state = {
       initialBoard: '52...6.........7.13...........4..8..6......5...........418.........3..2...87.....',
       board: '',
-      initialNumbers: []
+      initialNumbers: [],
+      display: ''
     }
 
     this.getNumbers = this.getNumbers.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this.markInitialNumners = this.markInitialNumners.bind(this);
   }
 
   componentDidMount() {
     if(this.state.board === '') {
-      const initialNumbers = this.markInitialNumners();
+      const initialNumbers = this.markBoardNumbers(this.state.initialBoard);
 
       this.setState({
         board: this.state.initialBoard,
         initialNumbers: initialNumbers
       })
     }
+  }
+
+  checkPuzzleCorrectness() {
+    const board = this.state.board;
+    const evaluatedBoard = sudoku.solve(board);
+    (evaluatedBoard === board)
+    ? this.setState({display: 'sudoku rozwiązane poprawnie'})
+    : evaluatedBoard
+    ? this.setState({display: 'jestes na dobrej drodze do rozwiazania sudoku'})
+    : this.setState({display: 'gdzies spopelniles blad'});
+  }
+
+  startNewGame() {
+    const newGame = sudoku.generate();
+    const initialNumbers = this.markBoardNumbers(newGame);
+
+    this.setState({
+      initialBoard: newGame,
+      board: newGame,
+      initialNumbers: initialNumbers
+    });
+  }
+
+  solvePuzzle() {
+    const board = this.state.board;
+    const evaluatedBoard = sudoku.solve(board);
+
+    evaluatedBoard
+    ? this.setState({board: evaluatedBoard})
+    : this.setState({display: 'gdzies spopelniles blad'});
+
+  }
+
+  restartGame() {
+    this.setState({board: this.state.initialBoard})
   }
 
   getNumbers() {
@@ -47,9 +85,9 @@ class Board extends Component {
     });
   }
 
-  markInitialNumners() {
+  markBoardNumbers(board) {
     const initialNumbersIndex = [];
-    const initialBoard = [...this.state.initialBoard];
+    const initialBoard = [...board];
 
     initialBoard.forEach((element) => {
       (element !== '.') ? initialNumbersIndex.push(true) : initialNumbersIndex.push(false);
@@ -72,9 +110,20 @@ class Board extends Component {
     ));
 
     return (
-      <ul>
-        {listItems}
-      </ul>
+      <div>
+        <ul>
+          {listItems}
+        </ul>
+        <Display>
+          {this.state.display}
+        </Display>
+        <Buttons
+          check={() => this.checkPuzzleCorrectness()}
+          newGame={() => this.startNewGame()}
+          solve={() => this.solvePuzzle()}
+          restart={() => this.restartGame()}
+        />
+      </div>
     );
   }
 }
