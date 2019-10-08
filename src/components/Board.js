@@ -16,6 +16,7 @@ class Board extends Component {
 
     this.getNumbers = this.getNumbers.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleMouseOver = this.handleMouseOver.bind(this);
   }
 
   componentDidMount() {
@@ -100,66 +101,38 @@ class Board extends Component {
     return initialNumbersIndex;
   }
 
-  // disabled(number, index) {
-  //   return (
-  //     <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number} disabled/>
-  //   );
-  // }
-  //
-  // ordinary(number, index) {
-  //   return (
-  //     <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number}/>
-  //   );
-  // }
-
-  // const listItems = numbers.map((number, index) => (
-  //     <li className='sudoku-tile' key={index}>
-  //       { initialNumbers[index]
-  //         ? <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number} disabled/>
-  //         : <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number}/>
-  //       }
-  //     </li>
-  // ));
-
-  //==========
-  // <li className={'sudoku-tile tile' + index} key={index}>
-  //   { initialNumbers[index]
-  //     ? <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number} disabled/>
-  //     : <Tile handleChange={this.handleChange.bind(null, index)} tileValue={number}/>
-  //   }
-  // </li>
-  //=========
   handleMouseOver(index, e) {
-    // const element = e.target;
     const items = e.target.parentElement.parentElement.children;
 
-    function getFirstElementInARow(index) {
+    function highlightSelected(index, state) {
+      //highlight row
       const firstRowElement = index - index%9;
-      const columnNumber = index - firstRowElement;
 
       for(let i = 0; i < 9; i++) {
-        items[firstRowElement+i].classList.add('selected-row');
+        items[firstRowElement+i].classList.add('selected');
       }
+      //highlight column
+      const columnNumber = index - firstRowElement;
 
       let currentColumnElement = columnNumber;
 
       for(let i = 0; i < 9; i++) {
-        items[currentColumnElement].classList.add('selected-column');
+        items[currentColumnElement].classList.add('selected');
         currentColumnElement += 9;
       }
-
       //highlight block
-      // const blockOne    =  [0,  1,  2,  9, 10, 11, 18, 19, 20];
-      // const blockTwo    =  [3,  4,  5, 12, 13, 14, 21, 22, 23];
-      // const blockThree  =  [6,  7,  8, 15, 16, 17, 24, 25, 26];
-      // const blockFour   = [27, 28, 29, 36, 37, 38, 45, 46, 47];
-      // const blockFive   = [30, 31, 32, 39, 40, 41, 48, 49, 50];
-      // const blockSix    = [33, 34, 35, 42, 43, 44, 51, 52, 53];
-      // const blockSeven  = [54, 55, 56, 63, 64, 65, 72, 73, 74];
-      // const blockEight  = [57, 58, 59, 66, 67, 68, 75, 76, 77];
-      // const blockNine   = [60, 61, 62, 69, 70, 71, 78, 79, 80];
+      const board = [...state];
+      const stringArray = [];
 
-      const data = [
+      for(let i = 0; i < 9; i++) {
+        const slicedArray = board.slice(0, 9);
+        stringArray.push(slicedArray);
+        for(let j = 0; j < 9; j++) {
+          board.shift();
+        }
+      }
+
+      const blocksPattern = [
         [0,  1,  2,  9, 10, 11, 18, 19, 20],
         [3,  4,  5, 12, 13, 14, 21, 22, 23],
         [6,  7,  8, 15, 16, 17, 24, 25, 26],
@@ -171,23 +144,29 @@ class Board extends Component {
         [60, 61, 62, 69, 70, 71, 78, 79, 80]
       ];
 
+      let currentBlocksPattern = [];
 
-
-      const value = index;
-
-      const result = data.find(function(element) {
-
-        const asd = element.find(function(item) {
-          return item === value;
+      for(let i = 0; i < blocksPattern.length; i++) {
+        blocksPattern[i].find((element) => {
+            if(element === index) {
+               currentBlocksPattern = blocksPattern[i];
+              return;
+            }
         });
+      }
 
-        return asd;
-      });
-      console.log(result);
-      console.log(index);
+      const tiles = Array.from(items);
 
+      for(let i = 0; i < tiles.length; i++) {
+        currentBlocksPattern.forEach(function(element) {
+          if(element === parseInt([i])) {
+          tiles[i].classList.add('selected');
+          }
+        });
+      }
     }
-    getFirstElementInARow(index);
+
+    highlightSelected(index, this.state.board);
   }
 
   handleMouseLeave(index, e) {
@@ -195,7 +174,7 @@ class Board extends Component {
     const parent = element.parentElement.parentElement;
     const items = Array.from(parent.children);
     items.forEach(function(item) {
-      item.classList.remove('selected-row', 'selected-column');
+      item.classList.remove('selected');
     });
   }
 
